@@ -1,6 +1,6 @@
 'use client'
 
-import { FC } from 'react'
+import { FC, useRef, Fragment } from 'react'
 
 import {
   useReactTable,
@@ -10,6 +10,7 @@ import {
 import { Row } from './types'
 import { columns } from './columnsConfig'
 import { cn } from '@/lib/utils'
+import { useVirtualRows } from './features/useVirtualRow'
 
 type Props = {
   /**
@@ -24,8 +25,25 @@ export const DataTable: FC<Props> = ({ tableData }) => {
     data: tableData,
     getCoreRowModel: getCoreRowModel()
   })
+
+  /* Virtualizer logic start */
+
+  const scrollRef = useRef<HTMLDivElement>(null)
+
+  const { rows } = table.getRowModel()
+
+  const { before, after, virtualRows } = useVirtualRows({
+    scrollRef,
+
+    rowsCount: rows.length
+  })
+
+  /* Virtualizer logic end */
   return (
-    <div className='h-min max-h-screen max-w-full overflow-auto'>
+    <div
+      className='h-min max-h-screen max-w-full overflow-auto'
+      ref={scrollRef}
+    >
       <table className='border-separate border-spacing-0 text-xs'>
         <thead className='sticky left-0 top-0 z-20'>
           {table.getHeaderGroups().map(headerGroup => (
@@ -54,23 +72,43 @@ export const DataTable: FC<Props> = ({ tableData }) => {
           ))}
         </thead>
         <tbody>
-          {table.getRowModel().rows.map(row => (
-            <tr key={row.id}>
-              {row.getVisibleCells().map(cell => (
-                <td
-                  key={cell.id}
-                  className={cn(
-                    // basic styles
-                    'whitespace-nowrap font-normal text-gray-700',
-                    // border styles
-                    'border-b border-r border-solid border-b-stone-300 border-r-stone-300 first:border-l first:border-l-stone-300'
-                  )}
-                >
-                  {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                </td>
-              ))}
-            </tr>
-          ))}
+          <Fragment>
+            {/* Fix the issue with a sticky table header and infinite scroll */}
+            {before > 0 && (
+              <tr>
+                <td colSpan={columns.length} style={{ height: before }} />
+              </tr>
+            )}
+            {virtualRows.map(virtualRow => {
+              // this is the "real" current row
+              const row = rows[virtualRow.index]
+              return (
+                <tr key={row.id}>
+                  {row.getVisibleCells().map(cell => (
+                    <td
+                      key={cell.id}
+                      className={cn(
+                        // basic styles
+                        'whitespace-nowrap font-normal text-gray-700',
+                        // border styles
+                        'border-b border-r border-solid border-b-stone-300 border-r-stone-300 first:border-l first:border-l-stone-300'
+                      )}
+                    >
+                      {flexRender(
+                        cell.column.columnDef.cell,
+                        cell.getContext()
+                      )}
+                    </td>
+                  ))}
+                </tr>
+              )
+            })}
+            {after > 0 && (
+              <tr>
+                <td colSpan={columns.length} style={{ height: after }} />
+              </tr>
+            )}
+          </Fragment>
         </tbody>
       </table>
     </div>

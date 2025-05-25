@@ -12,8 +12,8 @@ const compat = new FlatCompat({
 const eslintConfig = [
   ...compat.config({
     extends: ['next/core-web-vitals', 'next/typescript', 'prettier'],
+
     rules: {
-      ...pluginReactHooks.configs.recommended.rules,
       /**
        * Allow empty arrow functions `() => {}`, while keeping other empty functions restricted
        * @see https://eslint.org/docs/latest/rules/no-empty-function#allow-arrowfunctions
