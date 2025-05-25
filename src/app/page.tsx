@@ -5,7 +5,7 @@ import { generateData } from '@/mocks/generateData'
 
 const SEED = 66
 
-const ROWS_AMOUNT = 33333
+const ROWS_AMOUNT = 333
 
 const tableData = generateData(ROWS_AMOUNT, SEED)
 
